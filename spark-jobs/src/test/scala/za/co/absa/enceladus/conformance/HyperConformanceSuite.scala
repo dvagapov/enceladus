@@ -24,9 +24,9 @@ class HyperConformanceSuite extends WordSpec {
 
   private def getMtConfig(columnName: String, dataType: String, value: String): Configuration = {
     val config = new BaseConfiguration
-    config.addProperty("transformer.hyperconformance.mapping.table.filter.col", columnName)
-    config.addProperty("transformer.hyperconformance.mapping.table.filter.type", dataType)
-    config.addProperty("transformer.hyperconformance.mapping.table.filter.val", value)
+    config.addProperty("mapping.table.filter.col", columnName)
+    config.addProperty("mapping.table.filter.type", dataType)
+    config.addProperty("mapping.table.filter.val", value)
     config
   }
 
@@ -55,7 +55,7 @@ class HyperConformanceSuite extends WordSpec {
 
     "throw an exception if filters are partially defined" in {
       val conf = getMtConfig("c", "long", "2")
-      conf.clearProperty("transformer.hyperconformance.mapping.table.filter.val")
+      conf.clearProperty("mapping.table.filter.val")
 
 
       intercept[IllegalArgumentException] {

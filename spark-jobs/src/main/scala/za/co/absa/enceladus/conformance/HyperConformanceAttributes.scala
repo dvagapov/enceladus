@@ -30,9 +30,9 @@ object HyperConformanceAttributes {
   val eventTimestampColumnKey = "event.timestamp.column"
   val eventTimestampPatternKey = "event.timestamp.pattern"
 
-  val mappingTableFilterColumnNameKey = s"$keysPrefix.mapping.table.filter.col"
-  val mappingTableFilterDataTypeKey = s"$keysPrefix.mapping.table.filter.type"
-  val mappingTableFilterValueKey = s"$keysPrefix.mapping.table.filter.val"
+  val mappingTableFilterColumnNameKey = "mapping.table.filter.col"
+  val mappingTableFilterDataTypeKey = "mapping.table.filter.type"
+  val mappingTableFilterValueKey = "mapping.table.filter.val"
 }
 
 trait HyperConformanceAttributes extends HasComponentAttributes {
@@ -64,7 +64,13 @@ trait HyperConformanceAttributes extends HasComponentAttributes {
     menasCredentialsFileKey ->
       PropertyMetadata("Menas credentials file", Some("Relative or absolute path to the file on local FS or HDFS"), required = false),
     menasAuthKeytabKey ->
-      PropertyMetadata("Keytab", Some("Relative or absolute path to the file on local FS or HDFS"), required = false)
+      PropertyMetadata("Keytab", Some("Relative or absolute path to the file on local FS or HDFS"), required = false),
+    mappingTableFilterColumnNameKey ->
+      PropertyMetadata("Mapping table filter column name", Some("Column name to use as a filter for mapping tables"), required = false),
+    mappingTableFilterDataTypeKey ->
+      PropertyMetadata("Mapping table filter data type", Some("Data type of mapping table filter"), required = false),
+    mappingTableFilterValueKey ->
+      PropertyMetadata("Mapping table filter value", Some("Value by which mapping tables should be filtered"), required = false)
   )
 
   override def getExtraConfigurationPrefix: Option[String] = None
