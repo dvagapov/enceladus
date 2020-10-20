@@ -19,6 +19,7 @@ import org.apache.spark.sql.SparkSession
 import za.co.absa.enceladus.dao.MenasDAO
 import za.co.absa.enceladus.dao.rest.RestDaoFactory
 import za.co.absa.enceladus.standardization_conformance.config.StandardizationConformanceConfig
+import za.co.absa.enceladus.utils.broadcast.MappingTableFilter
 import za.co.absa.enceladus.utils.fs.FileSystemVersionUtils
 import za.co.absa.enceladus.utils.modules.SourcePhase
 import za.co.absa.enceladus.utils.udf.UDFLibrary
@@ -35,6 +36,7 @@ object StandardizationAndConformanceJob extends StandardizationAndConformanceExe
     implicit val udfLib: UDFLibrary = new UDFLibrary
     val menasCredentials = cmd.menasCredentialsFactory.getInstance()
     implicit val dao: MenasDAO = RestDaoFactory.getInstance(menasCredentials, menasBaseUrls)
+    implicit val mappingTableFilters: Seq[MappingTableFilter] = Seq.empty
 
     val preparationResult = prepareJob()
     val schema = prepareStandardization(args, menasCredentials, preparationResult)

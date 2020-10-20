@@ -21,11 +21,13 @@ import za.co.absa.enceladus.conformance.interpreter.{ExplosionState, Interpreter
 import za.co.absa.enceladus.dao.MenasDAO
 import za.co.absa.enceladus.model.conformanceRule.{ConformanceRule, MappingConformanceRule}
 import za.co.absa.enceladus.model.{MappingTable, Dataset => ConfDataset}
-import za.co.absa.enceladus.utils.broadcast.{BroadcastUtils, LocalMappingTable}
+import za.co.absa.enceladus.utils.broadcast.{BroadcastUtils, LocalMappingTable, MappingTableFilter}
 import za.co.absa.enceladus.utils.error.{ErrorMessage, Mapping}
 import za.co.absa.spark.hats.transformations.NestedArrayTransformations
 
-case class MappingRuleInterpreterBroadcast(rule: MappingConformanceRule, conformance: ConfDataset) extends RuleInterpreter {
+case class MappingRuleInterpreterBroadcast(rule: MappingConformanceRule,
+                                           conformance: ConfDataset,
+                                           mappingTableFilters: Seq[MappingTableFilter]) extends RuleInterpreter {
 
   override def conformanceRule: Option[ConformanceRule] = Some(rule)
 
@@ -54,7 +56,7 @@ case class MappingRuleInterpreterBroadcast(rule: MappingConformanceRule, conform
       case (mappingTableField, dataframeField) => Mapping(mappingTableField, dataframeField)
     }.toSeq
 
-    val mt = LocalMappingTable(mapTable, mappingTableFields, rule.targetAttribute)
+    val mt = LocalMappingTable(mapTable, mappingTableFields, rule.targetAttribute, mappingTableFilters)
     val broadcastedMt = spark.sparkContext.broadcast(mt)
     val mappingUDF = BroadcastUtils.getMappingUdf(broadcastedMt, defaultValueOpt)
 

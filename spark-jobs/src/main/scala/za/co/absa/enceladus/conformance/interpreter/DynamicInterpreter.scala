@@ -29,6 +29,7 @@ import za.co.absa.enceladus.conformance.interpreter.rules.custom.CustomConforman
 import za.co.absa.enceladus.dao.MenasDAO
 import za.co.absa.enceladus.model.conformanceRule.{ConformanceRule, _}
 import za.co.absa.enceladus.model.{Dataset => ConfDataset}
+import za.co.absa.enceladus.utils.broadcast.MappingTableFilter
 import za.co.absa.enceladus.utils.error.ErrorMessage
 import za.co.absa.enceladus.utils.explode.ExplosionContext
 import za.co.absa.enceladus.utils.fs.FileSystemVersionUtils
@@ -49,11 +50,15 @@ object DynamicInterpreter {
     *
     */
   def interpret[T](conformance: ConfDataset, inputDf: Dataset[Row], jobShortName: String = "Conformance")
-               (implicit spark: SparkSession, dao: MenasDAO,
-                progArgs: ConformanceConfigParser[T], featureSwitches: FeatureSwitches): DataFrame = {
+               (implicit spark: SparkSession,
+                dao: MenasDAO,
+                progArgs: ConformanceConfigParser[T],
+                featureSwitches: FeatureSwitches,
+                mappingTableFilters: Seq[MappingTableFilter] = Seq.empty): DataFrame = {
 
     implicit val interpreterContext: InterpreterContext = InterpreterContext(inputDf.schema, conformance,
-      featureSwitches, jobShortName, spark, dao, InterpreterContextArgs.fromConformanceConfig(progArgs))
+      featureSwitches, jobShortName, spark, dao, InterpreterContextArgs.fromConformanceConfig(progArgs),
+      mappingTableFilters)
 
     applyCheckpoint(inputDf, "Start")
 
@@ -227,7 +232,7 @@ object DynamicInterpreter {
                                        (implicit ictx: InterpreterContext): RuleInterpreter = {
     if (canMappingRuleBroadcast(rule)) {
       log.info("Broadcast strategy for mapping rules is used")
-      MappingRuleInterpreterBroadcast(rule, ictx.conformance)
+      MappingRuleInterpreterBroadcast(rule, ictx.conformance, ictx.mappingTableFilters)
     } else {
       if (ictx.featureSwitches.experimentalMappingRuleEnabled) {
         log.info("Group explode strategy for mapping rules used")

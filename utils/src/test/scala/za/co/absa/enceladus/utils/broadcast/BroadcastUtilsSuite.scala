@@ -16,6 +16,7 @@
 package za.co.absa.enceladus.utils.broadcast
 
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, Row}
 import org.scalatest.WordSpec
 import za.co.absa.enceladus.utils.error.Mapping
@@ -69,7 +70,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
     "return a UDF that can be used for joining a dataframe with a simple mapping table" when {
 
       "1 UDF parameter is used without a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf1 = BroadcastUtils.getMappingUdf(broadcastedMt, None)
@@ -82,7 +83,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "1 UDF parameter is used with a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf1 = BroadcastUtils.getMappingUdf(broadcastedMt, Some(defaultValExpr))
@@ -95,7 +96,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "2 UDF parameters are used without a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf2 = BroadcastUtils.getMappingUdf(broadcastedMt, None)
@@ -108,7 +109,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "2 UDF parameters are used with a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf2 = BroadcastUtils.getMappingUdf(broadcastedMt, Some(defaultValExpr))
@@ -121,7 +122,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "3 UDF parameters are used without a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf3 = BroadcastUtils.getMappingUdf(broadcastedMt, None)
@@ -134,7 +135,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "3 UDF parameters are used with a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf3 = BroadcastUtils.getMappingUdf(broadcastedMt, Some(defaultValExpr))
@@ -147,7 +148,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "4 UDF parameters are used without a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf4 = BroadcastUtils.getMappingUdf(broadcastedMt, None)
@@ -160,7 +161,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "4 UDF parameters are used with a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf4 = BroadcastUtils.getMappingUdf(broadcastedMt, Some(defaultValExpr))
@@ -173,7 +174,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "5 UDF parameters are used without a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf5 = BroadcastUtils.getMappingUdf(broadcastedMt, None)
@@ -186,7 +187,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "5 UDF parameters are used with a default value" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         val mappingUdf5 = BroadcastUtils.getMappingUdf(broadcastedMt, Some(defaultValExpr))
@@ -203,12 +204,12 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
 
       "a join without key fields is attempted" in {
         intercept[IllegalArgumentException] {
-          LocalMappingTable(dfMt, Nil, "val")
+          LocalMappingTable(dfMt, Nil, "val", Nil)
         }
       }
 
       "a join with more than 5 fields attempted" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
 
         intercept[IllegalArgumentException] {
@@ -228,7 +229,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
             |{"key1":3,"key2":4,"key3":4,"errCol":{"errType":"confMapError","errCode":"E00001","errMsg":"Conformance Error - Null produced by mapping conformance rule","errCol":"val","rawValues":["4"],"mappings":[{"mappingTableColumn":"id","mappedDatasetColumn":"key2"}]}}"""
             .stripMargin.replace("\r\n", "\n")
 
-        val localMt = LocalMappingTable(dfMt, Seq("id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
         val mappings = Seq(Mapping("id", "key2"))
 
@@ -246,7 +247,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
             |{"key1":3,"key2":4,"key3":4,"errCol":{"errType":"confMapError","errCode":"E00001","errMsg":"Conformance Error - Null produced by mapping conformance rule","errCol":"val","rawValues":["4","4"],"mappings":[{"mappingTableColumn":"id","mappedDatasetColumn":"key2"},{"mappingTableColumn":"id","mappedDatasetColumn":"key2"}]}}"""
             .stripMargin.replace("\r\n", "\n")
 
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
         val mappings = Seq(Mapping("id", "key2"), Mapping("id", "key2"))
 
@@ -258,7 +259,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "3 UDF parameter is used" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
         val mappings = Seq(Mapping("id", "key2"), Mapping("id", "key2"), Mapping("id", "key2"))
 
@@ -273,7 +274,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "4 UDF parameter is used" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
         val mappings = Seq(Mapping("id", "key2"), Mapping("id", "key2"), Mapping("id", "key2"), Mapping("id", "key2"))
 
@@ -288,7 +289,7 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
       }
 
       "5 UDF parameter is used" in {
-        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id", "id"), "val")
+        val localMt = LocalMappingTable(dfMt, Seq("id", "id", "id", "id", "id"), "val", Nil)
         val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
         val mappings = Seq(Mapping("id", "key2"), Mapping("id", "key2"), Mapping("id", "key2"), Mapping("id", "key2"),
           Mapping("id", "key2"))
@@ -301,6 +302,24 @@ class BroadcastUtilsSuite extends WordSpec with SparkTestBase with LoggerTestBas
         assert(dfOut.filter(col("errCol").isNull).count == 2)
         assert(error.errCol.mappings.size == 5)
         assert(error.errCol.rawValues.size == 5)
+      }
+
+      "Mapping table filter is used" in {
+        val expectedWithErrorColumn1 =
+          """{"key1":1,"key2":2,"key3":4}
+            |{"key1":2,"key2":3,"key3":4,"errCol":{"errType":"confMapError","errCode":"E00001","errMsg":"Conformance Error - Null produced by mapping conformance rule","errCol":"val","rawValues":["2"],"mappings":[{"mappingTableColumn":"id","mappedDatasetColumn":"key1"}]}}
+            |{"key1":3,"key2":4,"key3":4,"errCol":{"errType":"confMapError","errCode":"E00001","errMsg":"Conformance Error - Null produced by mapping conformance rule","errCol":"val","rawValues":["3"],"mappings":[{"mappingTableColumn":"id","mappedDatasetColumn":"key1"}]}}"""
+            .stripMargin.replace("\r\n", "\n")
+
+        val localMt = LocalMappingTable(dfMt, Seq("id"), "val", Seq(MappingTableFilter("val", StringType, "a")))
+        val broadcastedMt = BroadcastUtils.broadcastMappingTable(localMt)
+        val mappings = Seq(Mapping("id", "key1"))
+
+        val errorUdf1 = BroadcastUtils.getErrorUdf(broadcastedMt, "val", mappings)
+
+        val dfOut = df.withColumn("errCol", errorUdf1($"key1")).orderBy("key1")
+
+        assertResults(dfOut, expectedWithErrorColumn1)
       }
     }
 

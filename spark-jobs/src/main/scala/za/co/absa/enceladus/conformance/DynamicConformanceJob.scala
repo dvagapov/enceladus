@@ -19,6 +19,7 @@ import org.apache.spark.sql.SparkSession
 import za.co.absa.enceladus.conformance.config.ConformanceConfig
 import za.co.absa.enceladus.dao.MenasDAO
 import za.co.absa.enceladus.dao.rest.RestDaoFactory
+import za.co.absa.enceladus.utils.broadcast.MappingTableFilter
 import za.co.absa.enceladus.utils.fs.FileSystemVersionUtils
 import za.co.absa.enceladus.utils.modules.SourcePhase
 
@@ -39,6 +40,8 @@ object DynamicConformanceJob extends ConformanceExecution {
     val preparationResult = prepareJob()
     prepareConformance(preparationResult)
     val inputData = readConformanceInputData(preparationResult.pathCfg)
+
+    implicit val mappingTableFilters: Seq[MappingTableFilter] = Seq.empty
 
     try {
       val result = conform(inputData, preparationResult)

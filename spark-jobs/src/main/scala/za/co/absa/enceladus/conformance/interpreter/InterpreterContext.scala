@@ -22,6 +22,7 @@ import za.co.absa.enceladus.conformance.config.{ConformanceConfig, ConformanceCo
 import za.co.absa.enceladus.dao.MenasDAO
 import za.co.absa.enceladus.model.{Dataset => ConfDataset}
 import za.co.absa.enceladus.standardization_conformance.config.StandardizationConformanceConfig
+import za.co.absa.enceladus.utils.broadcast.MappingTableFilter
 
 /** Holds everything that is needed in between dynamic conformance interpreter stages */
 
@@ -59,5 +60,6 @@ case class InterpreterContext(
                                jobShortName: String,
                                spark: SparkSession,
                                dao: MenasDAO,
-                               progArgs: InterpreterContextArgs
+                               progArgs: InterpreterContextArgs,
+                               mappingTableFilters: Seq[MappingTableFilter]
                              )

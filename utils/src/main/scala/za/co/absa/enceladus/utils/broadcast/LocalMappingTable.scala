@@ -17,7 +17,8 @@ package za.co.absa.enceladus.utils.broadcast
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{ArrayType, DataType, StructType}
+import org.apache.spark.sql.types.{ArrayType, DataType, StringType, StructType}
+import org.slf4j.LoggerFactory
 import za.co.absa.enceladus.utils.schema.SchemaUtils
 
 import scala.collection.mutable.ListBuffer
@@ -30,34 +31,48 @@ final case class LocalMappingTable(
                                     keyFields: Seq[String],
                                     targetAttribute: String,
                                     keyTypes: Seq[DataType],
-                                    valueType: DataType
+                                    valueType: DataType,
+                                    mtFilters: Seq[MappingTableFilter]
                                   )
 
 object LocalMappingTable {
+  private val log = LoggerFactory.getLogger(this.getClass)
 
   /**
     * Creates a local mapping table from a mapping table dataframe.
     *
-    * @param mappingTableDf  A mapping table dataframe.
-    * @param keyFields       A list of dataframe columns to be used as mapping keys
-    * @param targetAttribute A column to be used as the mapping value
+    * @param mappingTableDf      A mapping table dataframe.
+    * @param keyFields           A list of dataframe columns to be used as mapping keys
+    * @param targetAttribute     A column to be used as the mapping value
+    * @param mappingTableFilters Filters to apply to the mapping table before broadcasting
     */
   @throws[IllegalArgumentException]
   def apply(mappingTableDf: DataFrame,
             keyFields: Seq[String],
-            targetAttribute: String): LocalMappingTable = {
+            targetAttribute: String,
+            mappingTableFilters: Seq[MappingTableFilter]): LocalMappingTable = {
+    val dfMt = mappingTableFilters.foldLeft(mappingTableDf){ case (df, flt) => {
+      if (df.schema.fields
+        .exists(f => f.name.equalsIgnoreCase(flt.columnName) && f.dataType == flt.dataType)) {
+        log.warn(s"Applying filter: ${flt.columnName} == ${flt.value}.")
+        df.filter(col(flt.columnName).cast(StringType) === lit(flt.value))
+      } else {
+        log.warn(s"Field not found: ${flt.columnName} having data type ${flt.dataType}.")
+        df
+      }
+    } }
 
-    validateKeyFields(mappingTableDf, keyFields)
-    validateTargetAttribute(mappingTableDf, targetAttribute)
+    validateKeyFields(dfMt, keyFields)
+    validateTargetAttribute(dfMt, targetAttribute)
 
     val keyTypes = keyFields.map(fieldName =>
-      SchemaUtils.getFieldType(fieldName, mappingTableDf.schema).get
+      SchemaUtils.getFieldType(fieldName, dfMt.schema).get
     )
 
-    val valueType = SchemaUtils.getFieldType(targetAttribute, mappingTableDf.schema).get
+    val valueType = SchemaUtils.getFieldType(targetAttribute, dfMt.schema).get
 
     val mappingColumns = col(targetAttribute) +: keyFields.map(c => col(c))
-    val projectedDf = mappingTableDf.select(mappingColumns: _*)
+    val projectedDf = dfMt.select(mappingColumns: _*)
     val numberOfKeys = keyFields.size
 
     val mappingTable = projectedDf.collect().map(row => {
@@ -71,7 +86,7 @@ object LocalMappingTable {
       (keys.toSeq, value)
     }).toMap
 
-    LocalMappingTable(mappingTable, keyFields, targetAttribute, keyTypes, valueType)
+    LocalMappingTable(mappingTable, keyFields, targetAttribute, keyTypes, valueType, mappingTableFilters)
   }
 
   private def validateKeyFields(mappingTableDf: DataFrame, keyFields: Seq[String]): Unit = {

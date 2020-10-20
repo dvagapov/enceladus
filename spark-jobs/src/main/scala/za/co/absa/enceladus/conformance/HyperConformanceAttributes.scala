@@ -29,6 +29,10 @@ object HyperConformanceAttributes {
   val reportVersionKey = "report.version"
   val eventTimestampColumnKey = "event.timestamp.column"
   val eventTimestampPatternKey = "event.timestamp.pattern"
+
+  val mappingTableFilterColumnNameKey = s"$keysPrefix.mapping.table.filter.col"
+  val mappingTableFilterDataTypeKey = s"$keysPrefix.mapping.table.filter.type"
+  val mappingTableFilterValueKey = s"$keysPrefix.mapping.table.filter.val"
 }
 
 trait HyperConformanceAttributes extends HasComponentAttributes {

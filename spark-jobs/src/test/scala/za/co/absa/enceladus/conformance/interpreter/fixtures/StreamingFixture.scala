@@ -29,6 +29,7 @@ import za.co.absa.enceladus.conformance.interpreter.FeatureSwitches
 import za.co.absa.enceladus.conformance.streaming.InfoDateFactory
 import za.co.absa.enceladus.dao.MenasDAO
 import za.co.absa.enceladus.model.Dataset
+import za.co.absa.enceladus.utils.broadcast.MappingTableFilter
 import za.co.absa.enceladus.utils.testUtils.SparkTestBase
 
 trait StreamingFixture extends FunSuite with SparkTestBase with MockitoSugar {
@@ -83,6 +84,8 @@ trait StreamingFixture extends FunSuite with SparkTestBase with MockitoSugar {
       .setExperimentalMappingRuleEnabled(false)
       .setCatalystWorkaroundEnabled(catalystWorkaround)
       .setControlFrameworkEnabled(false)
+
+    implicit val mappingTableFilters: Seq[MappingTableFilter] = Seq.empty
 
     val memoryStream = new MemoryStream[Row](1, spark.sqlContext)(RowEncoder(input.schema))
     val hyperConformance = new HyperConformance()

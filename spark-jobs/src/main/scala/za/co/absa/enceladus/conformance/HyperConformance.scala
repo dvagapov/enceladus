@@ -21,6 +21,7 @@ import java.util.Date
 import org.apache.commons.configuration2.Configuration
 import org.apache.spark.SPARK_VERSION
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.DataType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
 import za.co.absa.enceladus.common.Constants._
@@ -32,11 +33,13 @@ import za.co.absa.enceladus.dao.MenasDAO
 import za.co.absa.enceladus.dao.auth.{MenasCredentialsFactory, MenasKerberosCredentialsFactory, MenasPlainCredentialsFactory}
 import za.co.absa.enceladus.dao.rest.{MenasConnectionStringParser, RestDaoFactory}
 import za.co.absa.enceladus.model.Dataset
+import za.co.absa.enceladus.utils.broadcast.MappingTableFilter
 import za.co.absa.hyperdrive.ingestor.api.transformer.{StreamTransformer, StreamTransformerFactory}
 
 class HyperConformance (implicit cmd: ConformanceConfig,
                         featureSwitches: FeatureSwitches,
                         menasBaseUrls: List[String],
+                        mappingTableFilters: Seq[MappingTableFilter],
                         infoDateFactory: InfoDateFactory) extends StreamTransformer {
   val log: Logger = LoggerFactory.getLogger(this.getClass)
 
@@ -146,6 +149,9 @@ object HyperConformance extends StreamTransformerFactory with HyperConformanceAt
     implicit val reportDateCol: InfoDateFactory = InfoDateFactory.getFactoryFromConfig(conf)
 
     implicit val menasBaseUrls: List[String] = MenasConnectionStringParser.parse(conf.getString(menasUriKey))
+
+    implicit val mappingTableFilters: Seq[MappingTableFilter] = getMappingTableFilters(conf)
+
     new HyperConformance()
   }
 
@@ -178,6 +184,35 @@ object HyperConformance extends StreamTransformerFactory with HyperConformanceAt
       case (true, false)  => new MenasPlainCredentialsFactory(conf.getString(menasCredentialsFileKey))
       case (false, true)  => new MenasKerberosCredentialsFactory(conf.getString(menasAuthKeytabKey))
       case (true, true)   => throw new IllegalArgumentException("Either a credentials file or a keytab should be specified, but not both.")
+    }
+  }
+
+  private[conformance] def getMappingTableFilters(conf: Configuration): Seq[MappingTableFilter] = {
+    if (conf.containsKey(mappingTableFilterColumnNameKey) ||
+      conf.containsKey(mappingTableFilterDataTypeKey) ||
+      conf.containsKey(mappingTableFilterValueKey)) {
+
+      val columnName = conf.getString(mappingTableFilterColumnNameKey)
+      val dataType = DataType.fromDDL(conf.getString(mappingTableFilterDataTypeKey))
+      val value = conf.getString(mappingTableFilterValueKey)
+
+      if (columnName == null) {
+        throw new IllegalArgumentException(s"$mappingTableFilterColumnNameKey not set in HyperConformance configuration.")
+      }
+
+      if (dataType == null) {
+        throw new IllegalArgumentException(s"$mappingTableFilterDataTypeKey not set in HyperConformance configuration.")
+      }
+
+      if (value == null) {
+        throw new IllegalArgumentException(s"$mappingTableFilterValueKey not set in HyperConformance configuration.")
+      }
+
+      log.info(s"With mapping table filter for column $columnName, type $dataType, value '$value'")
+
+      Seq(MappingTableFilter(columnName, dataType, value))
+    } else {
+      Nil
     }
   }
 }
