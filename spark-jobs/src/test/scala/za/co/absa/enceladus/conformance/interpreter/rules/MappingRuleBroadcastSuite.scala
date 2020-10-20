@@ -17,11 +17,13 @@ package za.co.absa.enceladus.conformance.interpreter.rules
 
 import org.apache.commons.io.IOUtils
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StringType
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import za.co.absa.enceladus.conformance.interpreter.DynamicInterpreter
 import za.co.absa.enceladus.conformance.interpreter.rules.testcasefactories.NestedTestCaseFactory._
 import za.co.absa.enceladus.conformance.interpreter.rules.testcasefactories.SimpleTestCaseFactory._
 import za.co.absa.enceladus.conformance.interpreter.rules.testcasefactories.{NestedTestCaseFactory, SimpleTestCaseFactory}
+import za.co.absa.enceladus.utils.broadcast.MappingTableFilter
 import za.co.absa.enceladus.utils.error.ErrorMessage
 import za.co.absa.enceladus.utils.general.JsonUtils
 import za.co.absa.enceladus.utils.testUtils.{LoggerTestBase, SparkTestBase}
@@ -50,6 +52,26 @@ class MappingRuleBroadcastSuite extends FunSuite with SparkTestBase with LoggerT
 
     implicit val (inputDf, dataset, dao, progArgs, featureSwitches) =
       simpleTestCaseFactory.getTestCase(true, true, simpleMappingRule)
+
+    val dfOut = DynamicInterpreter.interpret(dataset, inputDf)
+      .select($"id", $"int_num", $"long_num", $"str_val", $"errCol", $"conformedIntNum")
+      .cache
+
+    val actualSchema = dfOut.schema.treeString
+    val actualResults = JsonUtils.prettySparkJSON( dfOut.orderBy("id").toJSON.collect())
+
+    assertSchema(actualSchema, expectedSchema)
+    assertResults(actualResults, expectedResults)
+  }
+
+  test("Test broadcasting mapping rule with mapping table filters") {
+    val expectedSchema = getResourceString("/interpreter/mappingCases/simpleSchema.txt")
+    val expectedResults = getResourceString("/interpreter/mappingCases/simpleResultsB.json")
+
+    implicit val (inputDf, dataset, dao, progArgs, featureSwitches) =
+      simpleTestCaseFactory.getTestCase(true, true, simpleMappingRule)
+
+    implicit val mappingTableFilters: Seq[MappingTableFilter] = Seq(MappingTableFilter("val", StringType, "b"))
 
     val dfOut = DynamicInterpreter.interpret(dataset, inputDf)
       .select($"id", $"int_num", $"long_num", $"str_val", $"errCol", $"conformedIntNum")
